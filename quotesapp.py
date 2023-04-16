@@ -10,82 +10,145 @@ from PIL import ImageTk, Image
 from deep_translator import GoogleTranslator
 import pandas as pd
 
-#localPath = "C:/Users/Utilisateur/OneDrive/Documents/0prog/design_app/tp2/"
-localPath = ""
+localPath = "C:/Users/Utilisateur/OneDrive/Documents/0prog/design_app/quotesapp/"
+#localPath = ""
 
 db = 'quotes.db'
 con = sqlite3.connect(db)
 cursor = con.cursor()
 lastQuote = []
 
-def add(action):
-    if action == '':
-        addFrame = tk.Frame(root)
-        addFrame.configure(height=570, width=1040)
-        labelframe5 = tk.LabelFrame(addFrame)
-        labelframe5.configure(
-            background="white",
-            borderwidth=5,
-            height=500,
-            highlightbackground="#ffffff",
-            highlightcolor="#ffffff",
-            highlightthickness=3,
-            labelanchor="nw",
-            text='Citation\n',
-            width=800)
-        labelframe5.grid(column=1, row=0)
-        labelframe5.pack_propagate(0)
-        global addQuoteText
-        addQuoteText = tk.Text(labelframe5)
-        addQuoteText.configure(height=500, width=800)
-        addQuoteText.pack(side="top")
-        Avatar = tk.Label(addFrame)
-        img_avatar = tk.PhotoImage(file=localPath+"/photos/anonymous.png")
-        Avatar.configure(
-            height=200,
-            image=img_avatar,
-            text='label2',
-            width=200)
-        Avatar.grid(column=0, row=0, sticky="nw")
-        global nomAuteur
-        nomAuteur = tk.Entry(addFrame)
-        nomAuteur.grid(column=0, pady=182, row=0, sticky="nw")
-        global descAuteur
-        descAuteur = tk.Text(addFrame)
-        descAuteur.configure(height=10, width=23)
-        descAuteur.grid(
-            column=0,
-            pady=220,
-            row=0,
-            rowspan=100,
-            sticky="nw")
-        labelDesc = tk.Label(addFrame)
-        labelDesc.configure(text="Description de l'auteur")
-        labelDesc.grid(column=0, pady=205, row=0, sticky="nw")
-        global source
-        source = tk.Text(addFrame)
-        source.configure(height=10, width=23)
-        source.grid(column=0, pady=390, row=0, rowspan=100, sticky="nw")
-        labelSource = tk.Label(addFrame)
-        labelSource.configure(text='Source')
-        labelSource.grid(
-            column=0,
-            pady=380,
-            row=0,
-            rowspan=1000,
-            sticky="nw")
-        Confirmer = tk.Button(addFrame)
-        Confirmer.configure(text='Confirmer', width=20, command=lambda:change('add'))
-        Confirmer.grid(column=1, padx=5, row=1, sticky="w")
-        Annuler = tk.Button(addFrame)
-        Annuler.configure(text='Annuler', width=20, command=reloadBottomFrame)
-        Annuler.grid(column=1, padx=200, row=1, sticky="w")
-        addFrame.grid(column=0, row=2)
-        addFrame.grid_propagate(0)
-        addFrame.rowconfigure(2, uniform=1)
+def add():
+    addFrame = tk.Frame(root)
+    addFrame.configure(height=570, width=1040)
+    addFrameQuote = tk.LabelFrame(addFrame)
+    addFrameQuote.configure(
+        background="white",
+        borderwidth=5,
+        height=500,
+        highlightbackground="#ffffff",
+        highlightcolor="#ffffff",
+        highlightthickness=3,
+        labelanchor="nw",
+        text='Citation\n',
+        width=800)
+    addFrameQuote.grid(column=1, row=0)
+    addFrameQuote.pack_propagate(0)
+    global addQuoteText
+    addQuoteText = tk.Text(addFrameQuote)
+    addQuoteText.configure(height=500, width=800)
+    addQuoteText.pack(side="top")
+    Avatar.configure(
+        height=200,
+        image=img_avatar,
+        text='label2',
+        width=200)
+    Avatar.grid(column=0, row=0, sticky="nw")
+    global nomAuteur
+    nomAuteurLabel = tk.Label(addFrame, text="Nom de l'auteur")
+    nomAuteurLabel.grid(column=0, row=0, sticky="nw")
+    nomAuteur = tk.Text(addFrame, height=1, width=23)
+    nomAuteur.grid(column=0, pady=20, row=0, sticky="nw")
+    global descAuteur
+    descAuteur = tk.Text(addFrame)
+    descAuteur.configure(height=10, width=23)
+    descAuteur.grid(
+        column=0,
+        pady=66,
+        row=0,
+        rowspan=100,
+        sticky="nw")
+    labelDesc = tk.Label(addFrame)
+    labelDesc.configure(text="Description de l'auteur")
+    labelDesc.grid(column=0, pady=45, row=0, sticky="nw")
+    global source
+    source = tk.Text(addFrame)
+    source.configure(height=10, width=23)
+    source.grid(column=0, pady=259, row=0, rowspan=100, sticky="nw")
+    labelSource = tk.Label(addFrame)
+    labelSource.configure(text='Source')
+    labelSource.grid(
+        column=0,
+        pady=238,
+        row=0,
+        rowspan=1000,
+        sticky="nw")
+    Confirmer = tk.Button(addFrame)
+    Confirmer.configure(text='Confirmer', width=20, command=lambda:change('add'))
+    Confirmer.grid(column=1, padx=5, row=1, sticky="w")
+    Annuler = tk.Button(addFrame)
+    Annuler.configure(text='Annuler', width=20, command=reloadBottomFrame)
+    Annuler.grid(column=1, padx=200, row=1, sticky="w")
+    addFrame.grid(column=0, row=2)
+    addFrame.grid_propagate(0)
+    addFrame.rowconfigure(2, uniform=1)
 
 def edit():
-    print("Hello, world!")
+    editFrame = tk.Frame(root)
+    editFrame.configure(height=570, width=1040)
+    editFrameQuote = tk.LabelFrame(editFrame)
+    editFrameQuote.configure(
+        background="white",
+        borderwidth=5,
+        height=500,
+        highlightbackground="#ffffff",
+        highlightcolor="#ffffff",
+        highlightthickness=3,
+        labelanchor="nw",
+        text='Citation\n',
+        width=800)
+    editFrameQuote.grid(column=1, row=0)
+    editFrameQuote.pack_propagate(0)
+    global editQuoteText
+    editQuoteText = tk.Text(editFrameQuote)
+    editQuoteText.configure(height=500, width=800)
+    editQuoteText.insert(tk.INSERT, quote)
+    editQuoteText.pack(side="top")
+    Avatar.configure(
+        height=200,
+        image=img_avatar,
+        text='label2',
+        width=200)
+    Avatar.grid(column=0, row=0, sticky="nw")
+    global nomAuteur
+    nomAuteurLabel = tk.Label(editFrame, text="Nom de l'auteur")
+    nomAuteurLabel.grid(column=0, row=0, sticky="nw")
+    nomAuteur = tk.Text(editFrame, height=1, width=23)
+    nomAuteur.grid(column=0, pady=20, row=0, sticky="nw")
+    global descAuteur
+    descAuteur = tk.Text(editFrame)
+    descAuteur.configure(height=10, width=23)
+    descAuteur.grid(
+        column=0,
+        pady=66,
+        row=0,
+        rowspan=100,
+        sticky="nw")
+    labelDesc = tk.Label(editFrame)
+    labelDesc.configure(text="Description de l'auteur")
+    labelDesc.grid(column=0, pady=45, row=0, sticky="nw")
+    global source
+    source = tk.Text(editFrame)
+    source.configure(height=10, width=23)
+    
+    source.grid(column=0, pady=259, row=0, rowspan=100, sticky="nw")
+    labelSource = tk.Label(editFrame)
+    labelSource.configure(text='Source')
+    labelSource.grid(
+        column=0,
+        pady=238,
+        row=0,
+        rowspan=1000,
+        sticky="nw")
+    Confirmer = tk.Button(editFrame)
+    Confirmer.configure(text='Confirmer', width=20, command=lambda:change('edit'))
+    Confirmer.grid(column=1, padx=5, row=1, sticky="w")
+    Annuler = tk.Button(editFrame)
+    Annuler.configure(text='Annuler', width=20, command=reloadBottomFrame)
+    Annuler.grid(column=1, padx=200, row=1, sticky="w")
+    editFrame.grid(column=0, row=2)
+    editFrame.grid_propagate(0)
+    editFrame.rowconfigure(2, uniform=1)
 
 def delete():
     print("Hello, world!")
@@ -105,31 +168,40 @@ def copy():
 
 def change(action):
     if action == "add":
-        getChangeQuoteText = addQuoteText.get()
-        getChangeAuteurText = nomAuteur.get()
-        getChangeDescText = descAuteur.get()
-        getChangeSourceText = source.get()
+        getChangeQuoteText = addQuoteText.get(1.0, "end-1c")
+        getChangeAuteurText = nomAuteur.get(1.0, "end-1c")
+        getChangeDescText = descAuteur.get(1.0, "end-1c")
+        getChangeSourceText = source.get(1.0, "end-1c")
 
-        query="""SELECT Auteur FROM Auteurs WHERE Auteur='%s';""" % getChangeAuteurText
-        cursor.execute(query)
-        auteurInDb = cursor.fetchall()[0][0]
-
-        if auteurInDb.len() < 1:
-            query="""INSERT INTO Auteurs (Auteur, Desc) VALUES ('%s', '%s')""" % getChangeAuteurText, getChangeDescText
+        #print(getChangeDescText, getChangeAuteurText, getChangeSourceText, getChangeSourceText)
+        auteurInDb = ""
+        try:
+            query="""SELECT Auteur FROM Auteurs WHERE Auteur='%s';""" % getChangeAuteurText
             cursor.execute(query)
+            auteurInDb = cursor.fetchall()[0][0]
 
-            query="""SELECT AuteurID FROM Auteurs WHERE Auteur='%s' """ % getChangeAuteurText
-            cursor.fetchall()[0][0]
+            query="""SELECT AuteurID FROM Auteurs WHERE Auteur='%s' """ % auteurInDb
+            cursor.execute(query)
             idAuteur = int(cursor.fetchall()[0][0])
-            query="""INSERT INTO Citations (AuteurID, Citation_en, Source) VALUES ('%i', '%s', 's')""" % idAuteur, getChangeQuoteText, getChangeSourceText
+        except IndexError as e:
+            pass
+
+        if len(auteurInDb) <= 1:
+            print(getChangeAuteurText)
+            cursor.execute("INSERT INTO Auteurs (Auteur, Desc) VALUES (?, ?)", (getChangeAuteurText, getChangeDescText))
+
+            query = """SELECT AuteurID FROM Auteurs WHERE Auteur = '%s'""" % getChangeAuteurText
             cursor.execute(query)
+            idAuteur = int(cursor.fetchall()[0][0])
+
+            cursor.execute("INSERT INTO Citations (AuteurID, Citation_en, Source) VALUES (?, ?, ?)", (idAuteur, getChangeQuoteText, getChangeSourceText))
+            con.commit()
         else:
-            query="""SELECT AuteurID FROM Auteurs WHERE Auteur=%s""" % getChangeAuteurText
-            cursor.fetchall()[0][0]
-            idAuteur = int(cursor.fetchall()[0][0])
-            query="""INSERT INTO Citations (AuteurID, Citation_en, Source) VALUES ('%i', '%s', 's')""" % idAuteur, getChangeQuoteText, getChangeSourceText
-            cursor.execute(query)
+            cursor.execute("INSERT INTO Citations (AuteurID, Citation_en, Source) VALUES (?, ?, ?)", (idAuteur, getChangeQuoteText, getChangeSourceText))
+            con.commit()
 
+    if action == "edit":
+        print("hello world")
 
 def changeQuote(action):
     global photo
@@ -182,16 +254,19 @@ def changeQuote(action):
 
     query="""SELECT Desc FROM Auteurs WHERE AuteurID='%i';""" % auteurId
     cursor.execute(query)
+    global desc
     desc = cursor.fetchall()[0][0]
     auteurInfo.set(desc)
 
     query="""SELECT Auteur FROM Auteurs WHERE AuteurID='%i';""" % auteurId
     cursor.execute(query)
+    global quoteAuteur
     quoteAuteur = cursor.fetchall()[0][0]
     auteur.set(quoteAuteur)
 
     findSource="""SELECT Source FROM Citations WHERE rowid='%i';""" % quoteId
     cursor.execute(findSource)
+    global souse
     souse = cursor.fetchall()[0][0]
     source.set(souse)
 
@@ -200,25 +275,7 @@ def changeQuote(action):
     auteurSansEspaces = auteurSansEspaces.replace("-","")
     auteurSansEspaces = auteurSansEspaces.replace("'","")
     auteurSansEspaces = auteurSansEspaces.replace(".","")
-    """
-    pngPath = Path(localPath+"photos/"+auteurSansEspaces+".png")
-    jpgPath = Path(localPath+"photos/"+auteurSansEspaces+".jpg")
-    pngFile = localPath+"photos/"+auteurSansEspaces+".png"
-    jpgFile = localPath+"photos/"+auteurSansEspaces+".jpg"
-    if pngPath.is_file():
-        img_avatar = Image.open(pngFile)
-        photo = img_avatar.resize((200,200))
-        photo = ImageTk.PhotoImage(photo)
-        Avatar.config(image=photo)
 
-    elif jpgPath.is_file():
-        jpg = ImageTk.PhotoImage(Image.open(jpgFile, "r"))
-        Avatar.configure(image=jpg)
-
-    else:
-        pathAvatar = Path(localPath+"photos/avatar.png")
-        Avatar.configure(image=pathAvatar)
-    """
     chemin = localPath+"photos/"
     filelist = [file for file in os.listdir(chemin) if file.startswith(auteurSansEspaces) and file.endswith(('.png', '.PNG', '.GIF', '.gif', '.jpg', '.JPG', '.jpeg', '.JPEG'))]
     if len(filelist)> 0:
@@ -232,14 +289,14 @@ def changeQuote(action):
 def reloadBottomFrame():
     bottomFrame = tk.Frame(root)
     bottomFrame.configure(height=570, width=1040)
-    labelframe5 = tk.LabelFrame(bottomFrame)
-    labelframe5.configure(
+    addFrameQuote = tk.LabelFrame(bottomFrame)
+    addFrameQuote.configure(
         background="white",
         borderwidth=5,
         height=500,
         text='Citation\n',
         width=800)
-    QuoteLabel = tk.Label(labelframe5)
+    QuoteLabel = tk.Label(addFrameQuote)
     quote = tk.StringVar()
     QuoteLabel.configure(
         background="#ffffff",
@@ -251,8 +308,8 @@ def reloadBottomFrame():
         fill="both",
         pady=100,
         side="top")
-    labelframe5.grid(column=1, row=0)
-    labelframe5.pack_propagate(0)
+    addFrameQuote.grid(column=1, row=0)
+    addFrameQuote.pack_propagate(0)
     Avatar = tk.Label(bottomFrame,height=200,image=img_avatar,width=200)
     Avatar.grid(column=0, row=0, sticky="nw")
     AuteurLabel = tk.Label(bottomFrame)
@@ -319,36 +376,36 @@ topFrame.grid_propagate(0)
 middleFrame = tk.Frame(root)
 middleFrame.configure(height=30, width=1040)
 
-ajouterButtonIcon = tk.PhotoImage(file="icons\plus.png")
+ajouterButtonIcon = tk.PhotoImage(file=localPath+"icons\plus.png")
 ajouterButton = tk.Button(middleFrame, image=ajouterButtonIcon, height=20, width=20, relief="flat")
-ajouterButton.configure(command=lambda:add(''))
+ajouterButton.configure(command=add)
 ajouterButton.grid(column=0, row=0)
 
-modifierButtonIcon = tk.PhotoImage(file="icons\edit.png")
+modifierButtonIcon = tk.PhotoImage(file=localPath+"icons\edit.png")
 modifierButton = tk.Button(middleFrame, image=modifierButtonIcon, height=20, width=20, relief="flat")
 modifierButton.configure(command=edit)
 modifierButton.grid(column=1, row=0)
 
 deleteButton = tk.Button(middleFrame)
-deleteButtonIcon = tk.PhotoImage(file="icons\delete.png")
+deleteButtonIcon = tk.PhotoImage(file=localPath+"icons\delete.png")
 deleteButton = tk.Button(middleFrame, image=deleteButtonIcon, height=20, width=20, relief="flat")
 deleteButton.configure(command=delete)
 deleteButton.grid(column=2, row=0)
 
 importButton = tk.Button(middleFrame)
-importButtonIcon = tk.PhotoImage(file="icons\input.png")
+importButtonIcon = tk.PhotoImage(file=localPath+"icons\input.png")
 importButton = tk.Button(middleFrame, image=importButtonIcon, height=20, width=20, relief="flat")
 importButton.configure(command=importcsv)
 importButton.grid(column=3, row=0)
 
 exportButton = tk.Button(middleFrame)
-exportButtonIcon = tk.PhotoImage(file="icons\output.png")
+exportButtonIcon = tk.PhotoImage(file=localPath+"icons\output.png")
 exportButton = tk.Button(middleFrame, image=exportButtonIcon, height=20, width=20, relief="flat")
 exportButton.configure(command=export)
 exportButton.grid(column=4, row=0)
 
 copyButton = tk.Button(middleFrame)
-copyButtonIcon = tk.PhotoImage(file="icons\clipboard-copy.png")
+copyButtonIcon = tk.PhotoImage(file=localPath+"icons\clipboard-copy.png")
 copyButton = tk.Button(middleFrame, image=copyButtonIcon, height=20, width=20, relief="flat")
 copyButton.config(command=copy)
 copyButton.grid(column=5, row=0)
@@ -375,14 +432,14 @@ middleFrame.grid(column=0, pady=10, row=1)
 middleFrame.grid_propagate(0)
 bottomFrame = tk.Frame(root)
 bottomFrame.configure(height=570, width=1040)
-labelframe5 = tk.LabelFrame(bottomFrame)
-labelframe5.configure(
+addFrameQuote = tk.LabelFrame(bottomFrame)
+addFrameQuote.configure(
     background="white",
     borderwidth=5,
     height=500,
     text='Citation\n',
     width=800)
-QuoteLabel = tk.Label(labelframe5)
+QuoteLabel = tk.Label(addFrameQuote)
 quote = tk.StringVar()
 QuoteLabel.configure(
     background="#ffffff",
@@ -394,8 +451,8 @@ QuoteLabel.pack(
     fill="both",
     pady=100,
     side="top")
-labelframe5.grid(column=1, row=0)
-labelframe5.pack_propagate(0)
+addFrameQuote.grid(column=1, row=0)
+addFrameQuote.pack_propagate(0)
 Avatar = tk.Label(bottomFrame,height=200,image=img_avatar,width=200)
 Avatar.grid(column=0, row=0, sticky="nw")
 AuteurLabel = tk.Label(bottomFrame)
