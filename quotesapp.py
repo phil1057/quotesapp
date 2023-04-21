@@ -9,6 +9,7 @@ from pathlib import Path
 from PIL import ImageTk, Image
 from deep_translator import GoogleTranslator
 import pandas as pd
+import pyperclip
 
 localPath = "C:/Users/Utilisateur/OneDrive/Documents/0prog/design_app/quotesapp/"
 #localPath = ""
@@ -17,6 +18,8 @@ db = 'quotes.db'
 con = sqlite3.connect(db)
 cursor = con.cursor()
 lastQuote = []
+
+existingKeywords = False
 
 def add():
     addFrame = tk.Frame(root)
@@ -83,6 +86,7 @@ def add():
     addFrame.grid_propagate(0)
     addFrame.rowconfigure(2, uniform=1)
 
+
 def edit():
     editFrame = tk.Frame(root)
     editFrame.configure(height=570, width=1040)
@@ -102,7 +106,7 @@ def edit():
     global editQuoteText
     editQuoteText = tk.Text(editFrameQuote)
     editQuoteText.configure(height=500, width=800)
-    editQuoteText.insert(tk.INSERT, quote)
+    editQuoteText.insert("end", quote.get())
     editQuoteText.pack(side="top")
     Avatar.configure(
         height=200,
@@ -114,10 +118,12 @@ def edit():
     nomAuteurLabel = tk.Label(editFrame, text="Nom de l'auteur")
     nomAuteurLabel.grid(column=0, row=0, sticky="nw")
     nomAuteur = tk.Text(editFrame, height=1, width=23)
+    nomAuteur.insert(tk.INSERT, auteur.get())
     nomAuteur.grid(column=0, pady=20, row=0, sticky="nw")
     global descAuteur
     descAuteur = tk.Text(editFrame)
     descAuteur.configure(height=10, width=23)
+    descAuteur.insert(tk.INSERT, auteurInfo.get())
     descAuteur.grid(
         column=0,
         pady=66,
@@ -128,10 +134,11 @@ def edit():
     labelDesc.configure(text="Description de l'auteur")
     labelDesc.grid(column=0, pady=45, row=0, sticky="nw")
     global source
-    source = tk.Text(editFrame)
-    source.configure(height=10, width=23)
+    sourceText = tk.Text(editFrame)
+    sourceText.insert(tk.INSERT, source.get())
+    sourceText.configure(height=10, width=23)
     
-    source.grid(column=0, pady=259, row=0, rowspan=100, sticky="nw")
+    sourceText.grid(column=0, pady=259, row=0, rowspan=100, sticky="nw")
     labelSource = tk.Label(editFrame)
     labelSource.configure(text='Source')
     labelSource.grid(
@@ -151,10 +158,16 @@ def edit():
     editFrame.rowconfigure(2, uniform=1)
 
 def delete():
-    print("Hello, world!")
+    confirm = tk.messagebox.askyesno("Supprimer une citation", "Êtes-vous sur de vouloir supprimer cette citation?")
+    if confirm:
+        cursor.execute("DELETE FROM Citations WHERE rowid=?", (quoteId,))
+        con.commit()
+        changeQuote("next")
+    else:
+        pass
+
 
 def importcsv():
-    bottomFrame.forget()
     importFrame = tk.Frame(root)
     importFrame.pack()
     importButton = tk.Button(importFrame, text="Importer un fichier CSV")
@@ -164,7 +177,8 @@ def export():
     filetype = (('text files', 'csv'), ('All files', '*.*'))
 
 def copy():
-    print("Hello, world!")
+    pyperclip.copy(quote.get())
+    tk.messagebox.showinfo('Copié!', 'La citation à été copié dans le presse-papier!')
 
 def change(action):
     if action == "add":
@@ -201,7 +215,37 @@ def change(action):
             con.commit()
 
     if action == "edit":
-        print("hello world")
+        getChangeQuoteText = addQuoteText.get(1.0, "end-1c")
+        getChangeAuteurText = nomAuteur.get(1.0, "end-1c")
+        getChangeDescText = descAuteur.get(1.0, "end-1c")
+        getChangeSourceText = source.get(1.0, "end-1c")
+
+        #print(getChangeDescText, getChangeAuteurText, getChangeSourceText, getChangeSourceText)
+        auteurInDb = ""
+        try:
+            query="""SELECT Auteur FROM Auteurs WHERE Auteur='%s';""" % getChangeAuteurText
+            cursor.execute(query)
+            auteurInDb = cursor.fetchall()[0][0]
+
+            query="""SELECT AuteurID FROM Auteurs WHERE Auteur='%s' """ % auteurInDb
+            cursor.execute(query)
+            idAuteur = int(cursor.fetchall()[0][0])
+        except IndexError as e:
+            pass
+
+        if len(auteurInDb) <= 1:
+            print(getChangeAuteurText)
+            cursor.execute("INSERT INTO Auteurs (Auteur, Desc) VALUES (?, ?)", (getChangeAuteurText, getChangeDescText))
+
+            query = """SELECT AuteurID FROM Auteurs WHERE Auteur = '%s'""" % getChangeAuteurText
+            cursor.execute(query)
+            idAuteur = int(cursor.fetchall()[0][0])
+
+            cursor.execute("UPDATE Citations SET AuteurID=?, Citation_en=?, Source=? WHERE ", (idAuteur, getChangeQuoteText, getChangeSourceText))
+            con.commit()
+        else:
+            cursor.execute("INSERT INTO Citations (AuteurID, Citation_en, Source) VALUES (?, ?, ?)", (idAuteur, getChangeQuoteText, getChangeSourceText))
+            con.commit()
 
 def changeQuote(action):
     global photo
@@ -211,10 +255,15 @@ def changeQuote(action):
     global lang
     global quoteNumber
     global sessionCount
+    global existingKeywords
     sessionCount = 1
     langValue = lang.get()
+
+    keywordsVar = entryKeywords.get()
+
     cursor.execute("SELECT COUNT(*) FROM Citations")
     size = cursor.fetchall()[0][0]
+    
     if action == "last":
         quoteId = quoteId - 1
     elif action == "next":
@@ -225,28 +274,57 @@ def changeQuote(action):
     elif action == "random":
         randomQuoteId = random.randint(0, size)
         quoteId = randomQuoteId
+    elif action == "keyword":
+        existingKeywords = True
+    elif action == "sameQuote":
+        quoteId = quoteId + 1
+        quoteId = quoteId - 1
     else:
         langValue = action
-    queryEn="""SELECT Citation_en FROM Citations WHERE rowid='%i';""" % quoteId
-    cursor.execute(queryEn)
-    quoteTextEn = cursor.fetchall()[0][0]
-    lastQuote.append(quoteId)
-    if langValue == "en":
-        quoteNumber.set(f"{quoteId}/{size}")
-        #cursor.execute(f"SELECT Citation_en, rowid FROM Citations WHERE rowid={quoteId}")
-        #print(quoteText)
-        quote.set(quoteTextEn)
-    elif langValue == "fr":
-        quoteNumber.set(f"{quoteId}/{size}")
-        #cursor.execute(f"SELECT Citation_en, rowid FROM Citations WHERE rowid={quoteId}")
-        queryFr="""SELECT Citation_fr FROM Citations WHERE rowid='%i';""" % quoteId
-        cursor.execute(queryFr)
-        quoteText = cursor.fetchall()[0][0]
-        if len(quoteText) <= 2:
-            quoteFrancais = GoogleTranslator(source='auto', target='fr').translate(quoteTextEn) + "\n[Traduction automatique]"
-            quoteText = quoteFrancais
-        #print(quoteText)
-        quote.set(quoteText)
+
+    if existingKeywords == False:
+        queryEn="""SELECT Citation_en FROM Citations WHERE rowid='%i';""" % quoteId
+        cursor.execute(queryEn)
+        quoteTextEn = cursor.fetchall()[0][0]
+        lastQuote.append(quoteId)
+        if langValue == "en":
+            quoteNumber.set(f"{quoteId}/{size}")
+            #cursor.execute(f"SELECT Citation_en, rowid FROM Citations WHERE rowid={quoteId}")
+            #print(quoteText)
+            quote.set(quoteTextEn)
+        elif langValue == "fr":
+            quoteNumber.set(f"{quoteId}/{size}")
+            #cursor.execute(f"SELECT Citation_en, rowid FROM Citations WHERE rowid={quoteId}")
+            queryFr="""SELECT Citation_fr FROM Citations WHERE rowid='%i';""" % quoteId
+            cursor.execute(queryFr)
+            quoteText = cursor.fetchall()[0][0]
+            if len(quoteText) <= 2:
+                quoteFrancais = GoogleTranslator(source='auto', target='fr').translate(quoteTextEn) + "\n[Traduction automatique]"
+                quoteText = quoteFrancais
+            #print(quoteText)
+            quote.set(quoteText)
+            
+    elif existingKeywords == True:
+        randomQuoteId = random.randint(0, size)
+        quoteId = randomQuoteId
+        cursor.execute("SELECT Citation_en FROM Citations WHERE rowid=? AND Mots_clés LIKE ?;", (quoteId, "%" + keywordsVar + "%"))
+        quoteTextEn = cursor.fetchall()[0][0]
+        lastQuote.append(quoteId)
+        if langValue == "en":
+            quoteNumber.set(f"{quoteId}/{size}")
+            #cursor.execute(f"SELECT Citation_en, rowid FROM Citations WHERE rowid={quoteId}")
+            #print(quoteText)
+            quote.set(quoteTextEn)
+        elif langValue == "fr":
+            quoteNumber.set(f"{quoteId}/{size}")
+            #cursor.execute(f"SELECT Citation_en, rowid FROM Citations WHERE rowid={quoteId}")
+            cursor.execute("SELECT Citation_fr FROM Citations WHERE rowid=? AND Mots_clés LIKE ?;", (quoteId, "%" + keywordsVar + "%"))
+            quoteText = cursor.fetchall()[0][0]
+            if len(quoteText) <= 2:
+                quoteFrancais = GoogleTranslator(source='auto', target='fr').translate(quoteTextEn) + "\n[Traduction automatique]"
+                quoteText = quoteFrancais
+            #print(quoteText)
+            quote.set(quoteText)
 
     query="""SELECT AuteurID FROM Citations WHERE rowid='%i';""" % quoteId
     cursor.execute(query)
@@ -287,6 +365,11 @@ def changeQuote(action):
     Avatar.config(image=photo)
 
 def reloadBottomFrame():
+    global quote
+    global auteurInfo
+    global auteur
+    global Avatar
+    global source
     bottomFrame = tk.Frame(root)
     bottomFrame.configure(height=570, width=1040)
     addFrameQuote = tk.LabelFrame(bottomFrame)
@@ -336,8 +419,11 @@ def reloadBottomFrame():
     SourceLabel.grid(pady=350, row=0, rowspan=100, sticky="w")
     bottomFrame.grid(column=0, row=2)
     bottomFrame.grid_propagate(0)
-    changeQuote('random')
-
+    if 'quoteId' in globals():
+        changeQuote('sameQuote')
+    else:
+        changeQuote('random')
+    
 
 root = tk.Tk()
 root.configure(height=720, width=1080)
@@ -363,8 +449,9 @@ entryKeywords = tk.Entry(topFrame)
 entryKeywords.grid(column=1, row=2)
 
 buttonKeywords = tk.Button(topFrame)
-buttonKeywords.configure(text='Filtrer')
+buttonKeywords.configure(text='Filtrer', command=lambda:changeQuote("keyword"))
 buttonKeywords.grid(column=2, row=2)
+
 labelTitre = tk.Label(topFrame)
 labelTitre.configure(
     font="{Arial} 36 {italic}",
@@ -430,55 +517,9 @@ quoteIdLabel.grid(column=10, row=0)
 
 middleFrame.grid(column=0, pady=10, row=1)
 middleFrame.grid_propagate(0)
-bottomFrame = tk.Frame(root)
-bottomFrame.configure(height=570, width=1040)
-addFrameQuote = tk.LabelFrame(bottomFrame)
-addFrameQuote.configure(
-    background="white",
-    borderwidth=5,
-    height=500,
-    text='Citation\n',
-    width=800)
-QuoteLabel = tk.Label(addFrameQuote)
-quote = tk.StringVar()
-QuoteLabel.configure(
-    background="#ffffff",
-    font="{Times New Roman} 16 {italic}",
-    textvariable=quote,
-    wraplength=600)
-QuoteLabel.pack(
-    anchor="center",
-    fill="both",
-    pady=100,
-    side="top")
-addFrameQuote.grid(column=1, row=0)
-addFrameQuote.pack_propagate(0)
-Avatar = tk.Label(bottomFrame,height=200,image=img_avatar,width=200)
-Avatar.grid(column=0, row=0, sticky="nw")
-AuteurLabel = tk.Label(bottomFrame)
-auteur = tk.StringVar()
-AuteurLabel.configure(
-    font="{Times New Roman} 11 {}",
-    relief="ridge",
-    textvariable=auteur)
-AuteurLabel.grid(column=0, pady=183, row=0, sticky="nw")
-AuteurInfoLabel = tk.Label(bottomFrame)
-auteurInfo = tk.StringVar()
-AuteurInfoLabel.configure(
-    justify="left",
-    textvariable=auteurInfo,
-    wraplength=200)
-AuteurInfoLabel.grid(pady=210, row=0, rowspan=10, sticky="nw")
 
-SourceLabel = tk.Label(bottomFrame)
-source = tk.StringVar()
-SourceLabel.configure(
-    justify="left",
-    textvariable=source,
-    wraplength=200)
-SourceLabel.grid(pady=350, row=0, rowspan=100, sticky="w")
-bottomFrame.grid(column=0, row=2)
-bottomFrame.grid_propagate(0)
+reloadBottomFrame()
+
 root.grid_propagate(0)
 root.rowconfigure(2, uniform=1)
 
