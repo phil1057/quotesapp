@@ -5,16 +5,18 @@ from numpy import random
 from tkinter import filedialog
 import csv
 import os.path
+import os
 from pathlib import Path
 from PIL import ImageTk, Image
 from deep_translator import GoogleTranslator
 import pandas as pd
 import pyperclip
 
-localPath = "C:/Users/Utilisateur/OneDrive/Documents/0prog/design_app/quotesapp/"
+localPath = "C:/Users/phili/OneDrive/Documents/0prog/design_app/quotesapp/"
+#localPath = "C:/Users/Utilisateur/OneDrive/Documents/0prog/design_app/quotesapp/"
 #localPath = ""
 
-db = 'quotes.db'
+db = localPath+'quotes.db'
 con = sqlite3.connect(db)
 cursor = con.cursor()
 lastQuote = []
@@ -168,13 +170,20 @@ def delete():
 
 
 def importcsv():
-    importFrame = tk.Frame(root)
-    importFrame.pack()
-    importButton = tk.Button(importFrame, text="Importer un fichier CSV")
-    importButton.pack(pady=200)
+    filepath = filedialog.askopenfilename()
+    df = pd.read_csv(filepath)
+    print(df)
 
 def export():
-    filetype = (('text files', 'csv'), ('All files', '*.*'))
+    folder_selected = filedialog.askdirectory(title="Séléctionner un ficher pour déposer le fichier CSV de la base de données")
+    csv_file = folder_selected+"\citations.csv"
+    print(csv_file)
+    cursor.execute("SELECT * FROM Citations")
+    with open(csv_file, 'w', encoding="utf-8") as f:
+        csv_writer = csv.writer(f)
+        csv_writer.writerow([i[0] for i in cursor.description])
+        csv_writer.writerow(cursor)
+    tk.messagebox.showinfo(title="Succès!", message="La base de données à été exporté avec succès!")
 
 def copy():
     pyperclip.copy(quote.get())
@@ -201,7 +210,6 @@ def change(action):
             pass
 
         if len(auteurInDb) <= 1:
-            print(getChangeAuteurText)
             cursor.execute("INSERT INTO Auteurs (Auteur, Desc) VALUES (?, ?)", (getChangeAuteurText, getChangeDescText))
 
             query = """SELECT AuteurID FROM Auteurs WHERE Auteur = '%s'""" % getChangeAuteurText
@@ -213,6 +221,7 @@ def change(action):
         else:
             cursor.execute("INSERT INTO Citations (AuteurID, Citation_en, Source) VALUES (?, ?, ?)", (idAuteur, getChangeQuoteText, getChangeSourceText))
             con.commit()
+        reloadBottomFrame()
 
     if action == "edit":
         getChangeQuoteText = addQuoteText.get(1.0, "end-1c")
@@ -234,7 +243,6 @@ def change(action):
             pass
 
         if len(auteurInDb) <= 1:
-            print(getChangeAuteurText)
             cursor.execute("INSERT INTO Auteurs (Auteur, Desc) VALUES (?, ?)", (getChangeAuteurText, getChangeDescText))
 
             query = """SELECT AuteurID FROM Auteurs WHERE Auteur = '%s'""" % getChangeAuteurText
